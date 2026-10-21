@@ -230,7 +230,7 @@ const CONFIG = {
   birthDay: 17, birthMonth: 3,
   botUser: 'farzonaasadbot',
   photo: 'assets/photo.jpg',
-  crop: {x:.13, y:.14, w:.80, h:.50},   // кадр лица, без водяного знака
+  crop: {x:.17, y:.15, w:.72, h:.45},   // кадр лица, без водяного знака
 };
 const tg = window.Telegram && Telegram.WebApp;
 if (tg){ try{ tg.ready(); tg.expand(); tg.setHeaderColor('#2a0b2e'); tg.setBackgroundColor('#2a0b2e'); }catch(e){} }
@@ -395,7 +395,7 @@ function runFlowers(){
     const W = cv.clientWidth, H = Math.round(W*10/9); cv.width=W*dpr; cv.height=H*dpr;
     const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.fillStyle='#1d0722'; ctx.fillRect(0,0,W,H);
-    const cols = 54, rows = 60;
+    const cols = 84, rows = 93;
     const off = document.createElement('canvas'); off.width=cols; off.height=rows; const o = off.getContext('2d');
     const s = CONFIG.crop, sw = img.width*s.w, sh = img.height*s.h;
     o.drawImage(img, img.width*s.x, img.height*s.y, sw, sh, 0, 0, cols, rows);
@@ -403,15 +403,15 @@ function runFlowers(){
     const ramp = l => l<.5 ? [60+l*2*140, 10+l*2*40, 60+l*2*60] : [200+(l-.5)*2*55, 50+(l-.5)*2*195, 120+(l-.5)*2*120];
     const flowers = [];
     for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
-      const i=y*cols+x, r=px[i*4], g=px[i*4+1], b=px[i*4+2], l=(0.3*r+0.59*g+0.11*b)/255, rp=ramp(Math.min(1,Math.pow(l,.85)*1.1));
-      const fx=(x+.5)*cw+(Math.random()-.5)*cw*.7, fy=(y+.5)*ch+(Math.random()-.5)*ch*.7;
-      flowers.push({x:fx, y:fy, r:cw*(.78+Math.random()*.4), rot:Math.random()*6.28,
-        c:[.5*r+.5*rp[0], .5*g+.5*rp[1], .5*b+.5*rp[2]],
+      const i=y*cols+x, k2=v=>Math.max(0,Math.min(255,(v-128)*1.3+128+8)), r=k2(px[i*4]), g=k2(px[i*4+1]), b=k2(px[i*4+2]), l=(0.3*r+0.59*g+0.11*b)/255, rp=ramp(l);
+      const fx=(x+.5)*cw+(Math.random()-.5)*cw*.45, fy=(y+.5)*ch+(Math.random()-.5)*ch*.45;
+      flowers.push({x:fx, y:fy, r:cw*(.82+Math.random()*.3), rot:Math.random()*6.28,
+        c:[.82*r+.18*rp[0], .82*g+.18*rp[1], .82*b+.18*rp[2]],
         ts:Math.hypot(fx-W*.5,(fy-H*.4)*.9)/W + Math.random()*.25});
     }
     flowers.sort((a,b)=>a.ts-b.ts);
     const prev = location.hash==='#preview-finale';
-    const total = flowers.length, DUR = prev ? 400 : 8500, GROW = prev ? 50 : 420;
+    const total = flowers.length, DUR = prev ? 400 : 10000, GROW = prev ? 50 : 420;
     flowers.forEach((f,i)=>f.t0 = i/total*DUR);
     const rgb = (c,k)=>`rgb(${Math.min(255,c[0]*k)|0},${Math.min(255,c[1]*k)|0},${Math.min(255,c[2]*k)|0})`;
     function flower(f, sc){
