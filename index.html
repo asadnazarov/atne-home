@@ -226,6 +226,7 @@ select option{color:#222}
 const CONFIG = {
   birthDay: 17, birthMonth: 3,
   botUser: 'farzonaasadbot',
+  logUrl: 'https://farzona-bot.asadnazarov077.workers.dev/log',                         // адрес Worker, например https://farzona-bot.<поддомен>.workers.dev/log
   photo: 'assets/photo.jpg',
   crop: {x:.17, y:.15, w:.72, h:.45},   // кадр лица, без водяного знака
 };
@@ -244,13 +245,26 @@ startMusic(); bgm.addEventListener('canplay', startMusic, {once:true});
 ['pointerdown','touchstart','click','keydown'].forEach(ev=>document.addEventListener(ev, function once(){
   startMusic(); if(!bgm.paused) document.removeEventListener(ev, once); }, {passive:true}));
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && !bgm.muted) startMusic(); });
-$('#mute').addEventListener('click', e=>{ e.stopPropagation(); bgm.muted=!bgm.muted; $('#mute').style.opacity = bgm.muted?.45:1; if(!bgm.muted) startMusic(); });
+$('#mute').addEventListener('click', e=>{ e.stopPropagation(); bgm.muted=!bgm.muted; log('mute',{on:bgm.muted}); $('#mute').style.opacity = bgm.muted?.45:1; if(!bgm.muted) startMusic(); });
 
 /* ---------- навигация с кнопкой «назад» ---------- */
 const hist = []; let cur = 'lock';
+
+/* ---------- события владельцу страницы (через Worker → бот → личка) ---------- */
+const T0 = Date.now(), tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user || null;
+function log(e, d){
+  if(!CONFIG.logUrl || /^(localhost|127\.)/.test(location.hostname)) return;
+  try{
+    const body = JSON.stringify(Object.assign({e, t:Date.now(), scr:cur, n:tgUser?tgUser.first_name:''}, d||{}));
+    fetch(CONFIG.logUrl, {method:'POST', body, keepalive:true}).catch(()=>{});
+  }catch(x){}
+}
+document.addEventListener('visibilitychange', ()=>log(document.hidden?'hidden':'visible'));
+addEventListener('pagehide', ()=>log('close',{secs:Math.round((Date.now()-T0)/1000)}));
+addEventListener('error', ev=>log('err',{m:String(ev.message).slice(0,100)}));
 const NOBACK = new Set(['lock','intro','envelope']);
 const GLOW = new Set(['intro','envelope','choose','dateS','timeS','waitS','finale']);
-function activate(id){
+function activate(id){ log('screen',{id});
   cur = id;
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
   glow.classList.toggle('on', GLOW.has(id));
@@ -260,7 +274,7 @@ function activate(id){
   if(id==='letter') playUnfold();
 }
 function go(id){ if(!NOBACK.has(cur)||cur==='envelope') hist.push(cur); activate(id); }
-function back(){
+function back(){ log('back');
   if(!hist.length) return;
   const prev = hist.pop();
   if(prev==='envelope'){ $('#env').classList.remove('open'); $('#tapHint').textContent='откройте, пожалуйста'; }
@@ -269,7 +283,7 @@ function back(){
 }
 $('#back').addEventListener('click', back);
 if(tg && tg.BackButton){ try{ tg.BackButton.onClick(back); }catch(e){} }
-document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.next)));
+document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{ log('next',{date:cur==='dateS'?state.date:''}); go(b.dataset.next); }));
 
 /* ---------- замок: день рождения ---------- */
 const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -281,6 +295,7 @@ $('#openBtn').addEventListener('click', ()=>{
   startMusic();
   const ok = +$('#selDay').value===CONFIG.birthDay && +$('#selMonth').value===CONFIG.birthMonth;
   const btn = $('#openBtn');
+  log('pw',{d:+$('#selDay').value, m:+$('#selMonth').value, ok});
   if(!ok){
     const r = document.querySelector('#lock .row'); r.classList.remove('shake'); void r.offsetWidth; r.classList.add('shake');
     $('#err').classList.add('on'); tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('error'); return;
@@ -293,7 +308,7 @@ $('#openBtn').addEventListener('click', ()=>{
 /* ---------- конверт ---------- */
 $('#env').addEventListener('click', ()=>{
   const e = $('#env'); if(e.classList.contains('open')) return;
-  e.classList.add('open'); $('#tapHint').textContent = 'открываю…';
+  log('env_open'); e.classList.add('open'); $('#tapHint').textContent = 'открываю…';
   tg&&tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('medium');
   setTimeout(()=>go('letter'), 2200);
 });
@@ -331,7 +346,7 @@ const CHOICES = {
   time:{t:'Время', s:'я подожду, но недолго', needDate:false},
 };
 document.querySelectorAll('.choice').forEach(c=>c.addEventListener('click',()=>{
-  state.choice = c.dataset.c;
+  state.choice = c.dataset.c; log('choice',{c:state.choice});
   if(state.choice==='time') go('waitS');
   else if(CHOICES[state.choice].needDate) go('dateS');
   else finish();
@@ -350,10 +365,10 @@ function makeWheel(ul, items, onPick){
 const days = ['вс','пн','вт','ср','чт','пт','сб'], pad2 = n=>String(n).padStart(2,'0');
 const dateItems = Array.from({length:14},(_,k)=>{ const d=new Date(); d.setDate(d.getDate()+k+1);
   return {label:`${d.getDate()} ${months[d.getMonth()]} · ${days[d.getDay()]}`, value:`${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`, raw:pad2(d.getMonth()+1)+pad2(d.getDate())}; });
-const timeItems = []; for(let h=10; h<=22; h++){ for(const m of [0,30]){ if(h===22&&m) continue; timeItems.push({label:`${h}:${pad2(m)}`,value:`${h}:${pad2(m)}`,raw:pad2(h)+pad2(m)}); } }
+const timeItems = []; for(let h=10; h<=19; h++){ for(const m of [0,30]){ if(h===19&&m) continue; timeItems.push({label:`${h}:${pad2(m)}`,value:`${h}:${pad2(m)}`,raw:pad2(h)+pad2(m)}); } }
 makeWheel($('#wDate'), dateItems, i=>{state.date=i.value; state.dateRaw=i.raw;});
 makeWheel($('#wTime'), timeItems, i=>{state.time=i.value; state.timeRaw=i.raw;});
-$('#doneBtn').addEventListener('click', finish);
+$('#doneBtn').addEventListener('click', ()=>{ log('time',{time:state.time}); finish(); });
 
 /* ---------- финал ---------- */
 function finish(){
@@ -362,15 +377,15 @@ function finish(){
   $('#fWhen').textContent = c.needDate ? `${state.date} · ${state.time}` : '';
   $('#fWhen').style.display = c.needDate ? '' : 'none';
   $('#sendBtn').classList.remove('show'); $('#editBtn').classList.remove('show'); $('#finLine').textContent='';
-  go('finale'); runFlowers();
+  log('final', result()); go('finale'); runFlowers();
 }
-$('#editBtn').addEventListener('click', ()=>{ runId++; hist.length=0; hist.push('envelope','letter'); activate('choose'); });
+$('#editBtn').addEventListener('click', ()=>{ log('edit'); runId++; hist.length=0; hist.push('envelope','letter'); activate('choose'); });
 
 function result(){
   return {c:state.choice, d:CHOICES[state.choice].needDate?state.dateRaw:'', t:CHOICES[state.choice].needDate?state.timeRaw:''};
 }
 $('#sendBtn').addEventListener('click', ()=>{
-  const r = result(), btn = $('#sendBtn');
+  const r = result(), btn = $('#sendBtn'); log('send', r);
   btn.disabled = true; btn.textContent = 'Отправлено ♥';
   try{
     const viaKeyboard = tg && tg.initDataUnsafe && !tg.initDataUnsafe.query_id && tg.sendData;
@@ -460,6 +475,8 @@ function runFlowers(){
   };
   img.src = CONFIG.photo;
 }
+log('open', {u: tgUser ? {id:tgUser.id, fn:tgUser.first_name, ln:tgUser.last_name, un:tgUser.username, lc:tgUser.language_code} : null,
+  p: tg && tg.platform, v: tg && tg.version, sp: tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param});
 if(location.hash==='#preview-finale'){ state.choice='meet'; state.date='пн, 31 августа'; state.time='18:00'; state.dateRaw='0831'; state.timeRaw='1800'; finish(); }
 if(location.hash==='#pl-mid'||location.hash==='#pl-end'){ activate('letter'); const st=$('#stage'); unfoldTimers.forEach(clearTimeout); st.className = location.hash==='#pl-mid' ? 'stage u1 pv' : 'stage fin'; $('#nextLetter').classList.add('show'); }
 </script>
