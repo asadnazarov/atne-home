@@ -138,7 +138,7 @@ select option{color:#222}
 <div class="glow" id="glow"></div>
 <button id="back" aria-label="назад">‹</button>
 <button id="mute" aria-label="звук">♪</button>
-<audio id="bgm" src="assets/music.m4a" loop preload="auto" autoplay></audio>
+<audio id="bgm" src="assets/music-long.m4a" loop preload="auto" autoplay></audio>
 
 <!-- 1. замок -->
 <section class="screen active" id="lock">
@@ -208,22 +208,7 @@ select option{color:#222}
 <section class="screen" id="waitS">
   <h2>Я понимаю вас</h2>
   <p class="note">Я не прошу вас спешить, но и тянуть тоже не могу. <b>Мне тревожно</b> от мысли, что рядом с вами может оказаться кто-то другой, а я буду только смотреть со стороны. Поэтому, пожалуйста, не откладывайте надолго, если сможете.</p>
-  <button class="btn pink send" id="waitBtn">Отправить ответ Асаду ♥</button>
-</section>
-
-<!-- 7в. «давайте поговорим» -->
-<section class="screen" id="talkS">
-  <h2>Давайте поговорим</h2>
-  <p class="note" style="font-family:var(--script);font-size:21px;line-height:1.5;max-width:340px;margin:0 0 26px">Просто напишите мне в Telegram, когда вам будет удобно. Я отвечу сразу, как увижу.</p>
-  <button class="btn pink send">Отправить ответ Асаду ♥</button>
-</section>
-
-<!-- 7г. «давайте встретимся»: итог перед отправкой -->
-<section class="screen" id="meetS">
-  <h2>Давайте встретимся</h2>
-  <p class="note" style="font-family:var(--script);font-size:21px;line-height:1.5;max-width:340px;margin:0 0 8px">Где-нибудь тихо.</p>
-  <p class="note" id="meetWhen" style="font-family:var(--serif);font-size:26px;font-weight:600;margin:0 0 26px"></p>
-  <button class="btn pink send">Отправить ответ Асаду ♥</button>
+  <button class="btn pink" id="waitBtn">Хорошо ♥</button>
 </section>
 
 <!-- 8. финал -->
@@ -231,8 +216,8 @@ select option{color:#222}
   <canvas id="mosaic"></canvas>
   <div class="count" id="count">0</div>
   <div class="line" id="finLine"></div>
-  <div class="card"><h2>Спасибо, Фарзона</h2><div id="fChoice"></div><div class="when" id="fWhen"></div><div>Ответ отправлен Асаду ♥</div></div>
-  <button class="btn ghost" id="editBtn">изменить ответ</button>
+  <div class="card"><h2>Спасибо, Фарзона</h2><div id="fChoice"></div><div class="when" id="fWhen"></div><div id="sentLine" style="display:none">Ответ отправлен Асаду ♥</div></div>
+  <button class="btn pink" id="sendBtn">Отправить ответ Асаду ♥</button>
 </section>
 
 <script>
@@ -254,11 +239,18 @@ let runId = 0;
 
 /* ---------- музыка: играет сразу, при блокировке стартует с первого касания ---------- */
 bgm.volume = .22;
-function startMusic(){ if(!bgm.paused) return; bgm.play().catch(()=>{}); }
+let sessionStarted = false;
+function startMusic(){ if(!bgm.paused) return; bgm.play().then(()=>{ sessionStarted = true; }).catch(()=>{}); }
 startMusic(); bgm.addEventListener('canplay', startMusic, {once:true});
 ['pointerdown','touchstart','click','keydown'].forEach(ev=>document.addEventListener(ev, function once(){
   startMusic(); if(!bgm.paused) document.removeEventListener(ev, once); }, {passive:true}));
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && !bgm.muted) startMusic(); });
+/* если плеер остановили сами (звонок, Telegram, конец файла) — запускаем снова */
+bgm.addEventListener('ended', ()=>{ bgm.currentTime = 0; startMusic(); });
+bgm.addEventListener('pause', ()=>{ if(!bgm.muted && !document.hidden) setTimeout(startMusic, 300); });
+bgm.addEventListener('stalled', ()=>setTimeout(startMusic, 500));
+bgm.addEventListener('error', ()=>setTimeout(()=>{ bgm.load(); startMusic(); }, 1000));
+setInterval(()=>{ if(bgm.paused && !bgm.muted && !document.hidden && sessionStarted) startMusic(); }, 4000);
 $('#mute').addEventListener('click', e=>{ e.stopPropagation(); bgm.muted=!bgm.muted; log('mute',{on:bgm.muted}); $('#mute').style.opacity = bgm.muted?.45:1; if(!bgm.muted) startMusic(); });
 
 /* ---------- навигация с кнопкой «назад» ---------- */
@@ -276,8 +268,8 @@ function log(e, d){
 document.addEventListener('visibilitychange', ()=>log(document.hidden?'hidden':'visible'));
 addEventListener('pagehide', ()=>log('close',{secs:Math.round((Date.now()-T0)/1000)}));
 addEventListener('error', ev=>log('err',{m:String(ev.message).slice(0,100)}));
-const NOBACK = new Set(['lock','intro','envelope','finale']);
-const GLOW = new Set(['intro','envelope','choose','dateS','timeS','waitS','talkS','meetS','finale']);
+const NOBACK = new Set(['lock','intro','envelope']);
+const GLOW = new Set(['intro','envelope','choose','dateS','timeS','waitS','finale']);
 function activate(id){ log('screen',{id});
   cur = id;
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
@@ -361,15 +353,9 @@ const CHOICES = {
 };
 document.querySelectorAll('.choice').forEach(c=>c.addEventListener('click',()=>{
   state.choice = c.dataset.c; log('choice',{c:state.choice});
-  go({talk:'talkS', meet:'dateS', time:'waitS'}[state.choice]);
+  if(state.choice==='talk') finish(); else go({meet:'dateS', time:'waitS'}[state.choice]);
 }));
-let sending = false;
-function doSend(btn){
-  if(sending) return; sending = true; btn.disabled = true; btn.textContent = 'Отправляю…';
-  log('send', result()); tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('success');
-  setTimeout(()=>{ sending = false; document.querySelectorAll('.send').forEach(b=>{ b.disabled=false; b.textContent='Отправить ответ Асаду ♥'; }); finish(); }, 900);
-}
-document.querySelectorAll('.send').forEach(b=>b.addEventListener('click', ()=>doSend(b)));
+$('#waitBtn').addEventListener('click', finish);
 
 /* ---------- колёса даты и времени ---------- */
 function makeWheel(ul, items, onPick){
@@ -386,7 +372,7 @@ const dateItems = Array.from({length:14},(_,k)=>{ const d=new Date(); d.setDate(
 const timeItems = []; for(let h=10; h<=19; h++){ for(const m of [0,30]){ if(h===19&&m) continue; timeItems.push({label:`${h}:${pad2(m)}`,value:`${h}:${pad2(m)}`,raw:pad2(h)+pad2(m)}); } }
 makeWheel($('#wDate'), dateItems, i=>{state.date=i.value; state.dateRaw=i.raw;});
 makeWheel($('#wTime'), timeItems, i=>{state.time=i.value; state.timeRaw=i.raw;});
-$('#doneBtn').addEventListener('click', ()=>{ log('time',{time:state.time}); $('#meetWhen').textContent = `${state.date} · ${state.time}`; go('meetS'); });
+$('#doneBtn').addEventListener('click', ()=>{ log('time',{time:state.time}); finish(); });
 
 /* ---------- финал ---------- */
 function finish(){
@@ -394,10 +380,15 @@ function finish(){
   $('#fChoice').textContent = c.t + ' · ' + c.s;
   $('#fWhen').textContent = c.needDate ? `${state.date} · ${state.time}` : '';
   $('#fWhen').style.display = c.needDate ? '' : 'none';
-  $('#editBtn').classList.remove('show'); $('#finLine').textContent='';
+  $('#sendBtn').classList.remove('show'); $('#sendBtn').disabled=false; $('#sendBtn').textContent='Отправить ответ Асаду ♥'; $('#sentLine').style.display='none'; $('#finLine').textContent='';
   log('final', result()); go('finale'); runFlowers();
 }
-$('#editBtn').addEventListener('click', ()=>{ log('edit'); runId++; hist.length=0; hist.push('envelope','letter'); activate('choose'); });
+$('#sendBtn').addEventListener('click', ()=>{
+  const btn = $('#sendBtn'); btn.disabled = true; btn.textContent = 'Отправлено ♥';
+  log('send', result()); tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('success');
+  $('#sentLine').style.display = ''; NOBACK.add('finale'); hist.length = 0;
+  $('#back').classList.remove('on'); if(tg && tg.BackButton){ try{ tg.BackButton.hide(); }catch(e){} }
+});
 
 function result(){
   return {c:state.choice, d:CHOICES[state.choice].needDate?state.dateRaw:'', t:CHOICES[state.choice].needDate?state.timeRaw:''};
@@ -468,6 +459,7 @@ function runFlowers(){
     function reveal(){
       const snap = document.createElement('canvas'); snap.width=cv.width; snap.height=cv.height; snap.getContext('2d').drawImage(cv,0,0);
       const r0 = performance.now(); petalRain(26);
+      setTimeout(()=>{ if(my===runId) $('#sendBtn').classList.add('show'); }, 3600);   // страховка, если анимация подвиснет
       $('#finLine').textContent = 'Каждый цветок здесь — для вас, Фарзона';
       (function fade(now){
         if(my!==runId) return;
@@ -476,7 +468,7 @@ function runFlowers(){
         ctx.drawImage(snap,0,0,W,H);
         if(a>0){ ctx.globalAlpha=a*.92; ctx.drawImage(img, img.width*s.x, img.height*s.y, sw, sh, 0, 0, W, H); ctx.globalAlpha=1; }
         if(a<1) requestAnimationFrame(fade);
-        else { $('#editBtn').classList.add('show'); }
+        else { $('#sendBtn').classList.add('show'); }
       })(r0);
     }
   };
