@@ -39,7 +39,7 @@ select{flex:1;appearance:none;-webkit-appearance:none;background:rgba(255,255,25
 select option{color:#222}
 .shake{animation:shake .45s}
 @keyframes shake{20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
-.err{height:20px;margin:0 0 10px;font-size:13px;color:var(--pink2);opacity:0;transition:opacity .3s}
+.err{min-height:40px;max-width:320px;margin:0 0 10px;font-size:13.5px;line-height:1.35;color:var(--pink2);opacity:0;transition:opacity .3s}
 .err.on{opacity:1}
 
 #back{position:fixed;top:calc(12px + env(safe-area-inset-top));left:14px;z-index:9;border:0;background:rgba(255,255,255,.14);color:#fff;
@@ -142,13 +142,13 @@ select option{color:#222}
 
 <!-- 1. замок -->
 <section class="screen active" id="lock">
-  <h1>Эта эмоция закрыта датой</h1>
-  <p class="hint">Ваш день рождения</p>
+  <h1>Это письмо закрыто датой</h1>
+  <p class="hint" style="max-width:320px;font-size:19px;line-height:1.35">Укажите свой день рождения. Пройти дальше можно, только если вы укажете его верно: это секретный пароль.</p>
   <div class="row">
     <select id="selDay" aria-label="день"></select>
     <select id="selMonth" aria-label="месяц"></select>
   </div>
-  <p class="err" id="err">Не то. Попробуйте ещё раз</p>
+  <p class="err" id="err">Неверно. Пока вы не укажете свой день рождения правильно, дальше пройти нельзя.</p>
   <button class="btn" id="openBtn">Открыть</button>
 </section>
 
