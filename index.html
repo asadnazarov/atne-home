@@ -71,32 +71,30 @@ select option{color:#222}
 .tap{font-family:var(--script);color:var(--pink2);font-size:20px;animation:pulse 2s infinite}
 @keyframes pulse{50%{opacity:.4}}
 
-/* письмо: бумага раскладывается в три сгиба */
-#letter{padding-top:64px}
-.stage{position:absolute;left:50%;top:46%;width:var(--w);height:calc(var(--w)*1.36);transform:translate(-50%,-50%);transition:opacity .9s}
-.stage.gone{opacity:0;pointer-events:none}
-.fp{position:absolute;left:0;right:0;height:33.34%;
-  background:repeating-linear-gradient(transparent 0 20px,rgba(130,90,105,.16) 20px 21px),var(--paper);
-  box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.fp1{top:0;transform-origin:50% 100%;transform:perspective(900px) rotateX(-180deg);z-index:3;border-radius:10px 10px 0 0}
-.fp2{top:33.33%;z-index:1}
-.fp3{top:66.66%;transform-origin:50% 0;transform:perspective(900px) rotateX(180deg);z-index:2;border-radius:0 0 10px 10px}
+/* письмо: текст напечатан на самой бумаге, она раскладывается в три сгиба */
+#letter{justify-content:flex-end}
+.stage{position:absolute;left:50%;top:calc(50% - 36px);transform:translate(-50%,-50%)}
+.fp{position:absolute;left:0;right:0;transform-style:preserve-3d;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--paper)}
+.face.bk{transform:rotateX(180deg);background:repeating-linear-gradient(transparent 0 20px,rgba(130,90,105,.14) 20px 21px),var(--paper)}
+.fp1{top:0;transform-origin:50% 100%;transform:perspective(900px) rotateX(-180deg);z-index:3}
+.fp1,.fp1 .face{border-radius:12px 12px 0 0}
+.fp2{z-index:1}
+.fp3{transform-origin:50% 0;transform:perspective(900px) rotateX(180deg);z-index:2}
+.fp3,.fp3 .face{border-radius:0 0 12px 12px}
 .stage.u1 .fp1{animation:unf1 1.1s cubic-bezier(.45,.05,.3,1) forwards}
 .stage.u2 .fp3{animation:unf3 1.1s cubic-bezier(.45,.05,.3,1) forwards}
-.stage.u1 .fp1,.stage.u2 .fp3{will-change:transform,filter}
 @keyframes unf1{0%{transform:perspective(900px) rotateX(-180deg);filter:brightness(1)}50%{filter:brightness(.82)}100%{transform:perspective(900px) rotateX(0);filter:brightness(1)}}
 @keyframes unf3{0%{transform:perspective(900px) rotateX(180deg);filter:brightness(1)}50%{filter:brightness(.82)}100%{transform:perspective(900px) rotateX(0);filter:brightness(1)}}
-.paper{width:var(--w);max-height:calc(100vh - 170px);overflow:auto;background:var(--paper);color:var(--ink);border-radius:12px;
-  padding:26px 24px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.45);margin-bottom:16px;opacity:0;transition:opacity .9s}
-.paper.show{opacity:1}
-.paper .to{font-family:var(--script);color:#e0457f;font-size:18px;margin:0 0 6px}
-.paper h2{color:#4a3a42;font-size:30px;line-height:1.1;margin:0 0 16px}
-.paper p{font-family:var(--script);font-size:19px;line-height:1.5;margin:0 0 10px;opacity:0;transform:translateY(6px);transition:opacity .9s,transform .9s}
-.paper.show p{opacity:1;transform:none}
-.paper.show p:nth-of-type(2){transition-delay:.2s}.paper.show p:nth-of-type(3){transition-delay:.5s}
-.paper.show p:nth-of-type(4){transition-delay:.8s}.paper.show p:nth-of-type(5){transition-delay:1.1s}
-.paper .sign{text-align:right;color:#8a7a82;margin-top:14px}
-#nextLetter{opacity:0;pointer-events:none}
+.stage.pv .fp1,.stage.pv .fp3{animation-play-state:paused;animation-delay:-.55s}
+.stage.fin .fp1,.stage.fin .fp3{animation:none;transform:perspective(900px) rotateX(0)}
+.stage.fin .fp{box-shadow:none}
+.stage.fin{filter:drop-shadow(0 18px 30px rgba(0,0,0,.4))}
+.pc{position:absolute;left:0;padding:26px 24px;text-align:left;color:var(--ink);font-size:var(--fs,19px)}
+.pc .to{font-family:var(--script);color:#e0457f;font-size:.95em;margin:0 0 .3em}
+.pc h2{font-family:var(--serif);color:#4a3a42;font-size:1.55em;line-height:1.1;margin:0 0 .5em}
+.pc p{font-family:var(--script);line-height:1.5;margin:0 0 .55em}
+.pc .sign{text-align:right;color:#8a7a82;margin-top:.7em}#nextLetter{opacity:0;pointer-events:none}
 #nextLetter.show{opacity:1;pointer-events:auto}
 
 /* выбор */
@@ -170,8 +168,8 @@ select option{color:#222}
 
 <!-- 4. письмо -->
 <section class="screen" id="letter">
-  <div class="stage" id="stage"><div class="fp fp1"></div><div class="fp fp2"></div><div class="fp fp3"></div></div>
-  <div class="paper" id="paper">
+  <div class="stage" id="stage"></div>
+  <div id="letterTpl" hidden>
     <p class="to">Фарзона, здравствуйте</p>
     <h2>Я хотел написать вам нормально</h2>
     <p>Меня зовут Асад.</p>
@@ -182,7 +180,6 @@ select option{color:#222}
   </div>
   <button class="btn pink" id="nextLetter" data-next="choose">Дальше ♥</button>
 </section>
-
 <!-- 5. выбор -->
 <section class="screen" id="choose">
   <h2>Что будем делать?</h2>
@@ -301,22 +298,32 @@ $('#env').addEventListener('click', ()=>{
   setTimeout(()=>go('letter'), 2200);
 });
 
-/* ---------- письмо: бумага раскладывается ---------- */
-let unfolded = false, unfoldTimers = [];
+/* ---------- письмо: бумага раскладывается, текст на ней уже виден ---------- */
+let unfolded = false, built = false, unfoldTimers = [];
+function buildLetter(){
+  const stage = $('#stage'), tpl = $('#letterTpl').innerHTML;
+  const W = Math.round(Math.min(innerWidth*.84, 340)), avail = Math.min(innerHeight-190, 700);
+  const m = document.createElement('div'); m.className='pc'; m.style.cssText=`visibility:hidden;width:${W}px;left:0;top:0`; m.innerHTML = tpl; document.body.appendChild(m);
+  let fs = 19; for(; fs>=12; fs-=.5){ m.style.setProperty('--fs', fs+'px'); if(m.offsetHeight<=avail) break; }
+  const H = Math.max(3*120, Math.round(Math.min(avail, m.offsetHeight)/3)*3); m.remove();
+  stage.style.width = W+'px'; stage.style.height = H+'px'; stage.style.setProperty('--fs', fs+'px');
+  const ph = H/3;
+  stage.innerHTML = [1,2,3].map((n,i)=>`<div class="fp fp${n}" style="top:${i*ph}px;height:${ph}px"><div class="face"><div class="pc" style="width:${W}px;height:${H}px;top:${-i*ph}px">${tpl}</div></div>${n===2?'':'<div class="face bk"></div>'}</div>`).join('');
+  built = true;
+}
 function playUnfold(){
-  const stage = $('#stage'), paper = $('#paper'), btn = $('#nextLetter');
+  const btn = $('#nextLetter'), stage = $('#stage');
   unfoldTimers.forEach(clearTimeout); unfoldTimers = [];
   const t = (fn,ms)=>unfoldTimers.push(setTimeout(fn,ms));
-  if(unfolded){ stage.classList.add('gone'); paper.classList.add('show'); btn.classList.add('show'); return; }
-  unfolded = true;
-  stage.className = 'stage'; paper.classList.remove('show'); btn.classList.remove('show');
+  if(!built) buildLetter();
+  if(unfolded){ stage.classList.add('fin'); btn.classList.add('show'); return; }
+  unfolded = true; btn.classList.remove('show'); stage.className = 'stage';
   t(()=>stage.classList.add('u1'), 700);
   t(()=>stage.classList.add('u2'), 1900);
-  t(()=>{ stage.classList.add('gone'); paper.classList.add('show'); }, 3300);
-  t(()=>btn.classList.add('show'), 4600);
+  t(()=>stage.classList.add('fin'), 3100);
+  t(()=>btn.classList.add('show'), 3300);
   tg&&tg.HapticFeedback&&t(()=>tg.HapticFeedback.impactOccurred('light'), 1200);
 }
-
 /* ---------- выбор ---------- */
 const CHOICES = {
   talk:{t:'Поговорим', s:'просто напишите мне', needDate:false},
@@ -454,6 +461,7 @@ function runFlowers(){
   img.src = CONFIG.photo;
 }
 if(location.hash==='#preview-finale'){ state.choice='meet'; state.date='пн, 31 августа'; state.time='18:00'; state.dateRaw='0831'; state.timeRaw='1800'; finish(); }
+if(location.hash==='#pl-mid'||location.hash==='#pl-end'){ activate('letter'); const st=$('#stage'); unfoldTimers.forEach(clearTimeout); st.className = location.hash==='#pl-mid' ? 'stage u1 pv' : 'stage fin'; $('#nextLetter').classList.add('show'); }
 </script>
 </body>
 </html>
