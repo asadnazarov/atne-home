@@ -110,18 +110,18 @@ select option{color:#222}
 <!-- 1. замок -->
 <section class="screen active" id="lock">
   <h1>Эта эмоция закрыта датой</h1>
-  <p class="hint">Твой день рождения</p>
+  <p class="hint">Ваш день рождения</p>
   <div class="row">
     <select id="selDay" aria-label="день"></select>
     <select id="selMonth" aria-label="месяц"></select>
   </div>
-  <p class="err" id="err">Не то. Попробуй ещё раз</p>
+  <p class="err" id="err">Не то. Попробуйте ещё раз</p>
   <button class="btn" id="openBtn">Открыть</button>
 </section>
 
 <!-- 2. заставка -->
 <section class="screen" id="intro">
-  <h2>Фарзона,</h2><h2>это для тебя</h2>
+  <h2>Фарзона,</h2><h2>это для вас</h2>
 </section>
 
 <!-- 3. конверт -->
@@ -130,18 +130,18 @@ select option{color:#222}
     <div class="back"></div><div class="sheet"></div><div class="front"></div><div class="flap"></div>
     <div class="seal">♥</div><div class="name">Фарзона</div>
   </div>
-  <div class="tap" id="tapHint">открой, пожалуйста</div>
+  <div class="tap" id="tapHint">откройте, пожалуйста</div>
 </section>
 
 <!-- 4. письмо -->
 <section class="screen" id="letter">
   <div class="paper" id="paper">
-    <p class="to">Фарзона, привет</p>
-    <h2>Я хотел написать тебе нормально</h2>
+    <p class="to">Фарзона, здравствуйте</p>
+    <h2>Я хотел написать вам нормально</h2>
     <p>Меня зовут Асад.</p>
-    <p>В прошлый раз между нами вышло небольшое недопонимание: я сказал одно, а ты услышала другое. Никто не виноват, слова иногда путаются, а письмом это не поправишь.</p>
-    <p>Мне не хочется, чтобы из-за этого мы остались чужими. Поэтому я сделал для тебя эту страничку.</p>
-    <p>Давай начнём сначала и познакомимся по-настоящему. Выбери на следующем экране, как тебе удобно. Как скажешь, так и будет.</p>
+    <p>В прошлый раз между нами вышло небольшое недопонимание: я сказал одно, а вы услышали другое. Никто не виноват, слова иногда путаются, а письмом это не поправишь.</p>
+    <p>Мне не хочется, чтобы из-за этого мы остались чужими. Поэтому я сделал для вас эту страничку.</p>
+    <p>Давайте начнём сначала и познакомимся по-настоящему. Выберите на следующем экране, как вам удобно. Как скажете, так и будет.</p>
     <p class="sign">Асад</p>
   </div>
   <button class="btn pink" data-next="choose">Дальше ♥</button>
@@ -151,10 +151,10 @@ select option{color:#222}
 <section class="screen" id="choose">
   <h2>Что будем делать?</h2>
   <div class="choices">
-    <div class="choice" data-c="talk"><span class="e">💬</span><span><b>Давай поговорим</b><small>просто напиши мне</small></span></div>
-    <div class="choice" data-c="meet"><span class="e">☕</span><span><b>Давай встретимся</b><small>где-нибудь тихо</small></span></div>
-    <div class="choice" data-c="time"><span class="e">⏳</span><span><b>Дай мне время</b><small>я не тороплю</small></span></div>
-    <div class="choice" data-c="call"><span class="e">📞</span><span><b>Позвони мне</b><small>хочу услышать голос</small></span></div>
+    <div class="choice" data-c="talk"><span class="e">💬</span><span><b>Давайте поговорим</b><small>просто напишите мне</small></span></div>
+    <div class="choice" data-c="meet"><span class="e">☕</span><span><b>Давайте встретимся</b><small>где-нибудь тихо</small></span></div>
+    <div class="choice" data-c="time"><span class="e">⏳</span><span><b>Дайте мне время</b><small>я не тороплю</small></span></div>
+    <div class="choice" data-c="call"><span class="e">📞</span><span><b>Позвоните мне</b><small>хочу услышать голос</small></span></div>
   </div>
 </section>
 
@@ -176,7 +176,7 @@ select option{color:#222}
 <section class="screen" id="finale">
   <canvas id="mosaic"></canvas>
   <div class="count" id="count">0</div>
-  <div class="line" id="finLine">Из тысяч точек сложилась ты</div>
+  <div class="line" id="finLine">Из тысяч точек сложились вы</div>
   <div class="card"><h2>Спасибо, Фарзона</h2><div id="fChoice"></div><div class="when" id="fWhen"></div></div>
 </section>
 
@@ -209,7 +209,7 @@ $('#selDay').value = 1; $('#selMonth').value = 1;
 
 $('#openBtn').addEventListener('click', async ()=>{
   // музыка стартует по первому касанию
-  bgm.volume = .7; bgm.play().then(()=>{ $('#mute').style.display='block'; }).catch(()=>{});
+  bgm.volume = .22; bgm.play().then(()=>{ $('#mute').style.display='block'; }).catch(()=>{});
   const ok = +$('#selDay').value===CONFIG.birthDay && +$('#selMonth').value===CONFIG.birthMonth;
   const btn = $('#openBtn');
   if(!ok){
@@ -232,7 +232,7 @@ $('#env').addEventListener('click', ()=>{
 
 /* ---------- выбор ---------- */
 const CHOICES = {
-  talk:{t:'Поговорим', s:'просто напишу тебе', needDate:false},
+  talk:{t:'Поговорим', s:'просто напишу вам', needDate:false},
   meet:{t:'Встретимся', s:'где-нибудь тихо', needDate:true},
   time:{t:'Дам время', s:'я не тороплю', needDate:false},
   call:{t:'Позвонить', s:'хочу услышать голос', needDate:true},
