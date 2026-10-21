@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#2a0b2e">
+<title>Для Фарзоны</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Marck+Script&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#2a0b2e; --bg2:#4a1348; --pink:#ff5fa8; --pink2:#ffc2dc; --paper:#fbf1ee; --ink:#3b2a33;
+  --serif:'Cormorant Garamond',Georgia,serif; --script:'Marck Script','Segoe Script',cursive; --ui:'Montserrat',system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg1);color:#fff;font-family:var(--ui);overflow:hidden}
+body{background:radial-gradient(120% 80% at 50% 0%,var(--bg2),var(--bg1) 70%)}
+.glow{position:fixed;left:50%;top:46%;width:90vmin;height:90vmin;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(255,95,168,.55),rgba(255,95,168,0) 65%);filter:blur(10px);opacity:0;transition:opacity 1.2s;pointer-events:none}
+.glow.on{opacity:1}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 22px calc(24px + env(safe-area-inset-bottom));opacity:0;visibility:hidden;transition:opacity .8s,visibility .8s;text-align:center}
+.screen.active{opacity:1;visibility:visible}
+h1,h2{font-family:var(--serif);font-weight:600;margin:0 0 18px;letter-spacing:.01em}
+h1{font-size:30px;line-height:1.15} h2{font-size:34px}
+.hint{font-family:var(--script);color:var(--pink2);font-size:20px;margin:-6px 0 22px}
+.btn{width:100%;max-width:340px;border:0;border-radius:999px;padding:16px;font:600 16px var(--ui);color:#b2175f;
+  background:linear-gradient(180deg,#fff,#ffd3e6);box-shadow:0 0 28px rgba(255,95,168,.55);cursor:pointer;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn.pink{background:var(--pink);color:#fff}
+.btn[disabled]{opacity:.6}
+.row{display:flex;gap:10px;width:100%;max-width:340px;margin-bottom:14px}
+select{flex:1;appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);
+  color:#fff;border-radius:16px;padding:15px 12px;font:500 16px var(--ui);text-align:center;text-align-last:center;outline:none}
+select option{color:#222}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.err{height:20px;margin:0 0 10px;font-size:13px;color:var(--pink2);opacity:0;transition:opacity .3s}
+.err.on{opacity:1}
+
+/* intro */
+#intro h2{opacity:0;transform:translateY(10px);animation:rise 1.4s .3s forwards}
+#intro h2+h2{animation-delay:1.3s;font-size:30px}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* envelope */
+.env{position:relative;width:min(78vw,300px);aspect-ratio:3/2;margin-bottom:34px;cursor:pointer;perspective:900px}
+.env .back,.env .front,.env .flap,.env .sheet{position:absolute;left:0;right:0}
+.env .back{inset:0;background:#e8d7d6;border-radius:8px}
+.env .sheet{left:7%;right:7%;bottom:6%;height:88%;background:var(--paper);border-radius:6px;transition:transform 1.1s cubic-bezier(.3,.8,.3,1) .5s}
+.env .front{inset:0;background:linear-gradient(135deg,transparent 50%,#f2e4e2 50%) , linear-gradient(225deg,transparent 50%,#f6eae8 50%);border-radius:8px;
+  clip-path:polygon(0 0,50% 55%,100% 0,100% 100%,0 100%);background:#f4e6e4}
+.env .flap{top:0;height:58%;background:#faeeec;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .7s ease;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.15))}
+.seal{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 35% 30%,#ff8ec1,#d41a74);box-shadow:0 3px 10px rgba(0,0,0,.35);transition:transform .5s,opacity .5s;
+  display:flex;align-items:center;justify-content:center;font-size:20px;color:#ffd3e6}
+.env .name{position:absolute;left:0;right:0;bottom:12%;font-family:var(--script);color:#a77;font-size:20px;z-index:2}
+.env.open .seal{transform:scale(1.8) rotate(25deg);opacity:0}
+.env.open .flap{transform:rotateX(180deg);z-index:0}
+.env.open .sheet{transform:translateY(-55%)}
+.tap{font-family:var(--script);color:var(--pink2);font-size:20px;animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.4}}
+
+/* letter */
+.paper{width:100%;max-width:380px;max-height:calc(100vh - 120px);overflow:auto;background:var(--paper);color:var(--ink);border-radius:14px;
+  padding:26px 24px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.45);margin-bottom:16px}
+.paper .to{font-family:var(--script);color:#e0457f;font-size:18px;margin:0 0 6px}
+.paper h2{color:#4a3a42;font-size:30px;line-height:1.1;margin:0 0 16px}
+.paper p{font-family:var(--script);font-size:19px;line-height:1.5;margin:0 0 10px}
+.paper .sign{text-align:right;color:#8a7a82;margin-top:14px}
+.paper p{opacity:0;transform:translateY(6px);transition:opacity .9s,transform .9s}
+.screen.active .paper p{opacity:1;transform:none}
+
+/* choices */
+.choices{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
+.choice{display:flex;align-items:center;gap:14px;text-align:left;padding:15px 16px;border-radius:18px;color:#fff;cursor:pointer;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px);font-family:var(--ui)}
+.choice .e{font-size:24px;width:30px;text-align:center}
+.choice b{display:block;font-size:15px;font-weight:600}.choice small{opacity:.7;font-size:12.5px;font-weight:500}
+.choice:active{background:rgba(255,95,168,.35)}
+
+/* wheels */
+.wheel{position:relative;width:100%;max-width:300px;height:180px;margin-bottom:22px}
+.wheel .bar{position:absolute;left:0;right:0;top:72px;height:36px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);pointer-events:none}
+.wheel ul{list-style:none;margin:0;padding:72px 0;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
+.wheel ul::-webkit-scrollbar{display:none}
+.wheel li{height:36px;line-height:36px;scroll-snap-align:center;opacity:.5;font-size:16px;transition:opacity .15s}
+.wheel li.sel{opacity:1;font-weight:600}
+.wheel{-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+
+/* finale */
+#finale{justify-content:flex-start;padding-top:14px}
+#mosaic{width:min(100%,420px,46vh);aspect-ratio:9/10;flex:none;margin:0 auto;border-radius:12px}
+.count{font-size:12px;opacity:.6;margin:4px 0}
+.line{font-family:var(--script);color:var(--pink2);font-size:19px;margin:6px 0 12px}
+.card{width:100%;max-width:360px;padding:16px;border-radius:18px;background:rgba(20,6,26,.72);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)}
+.card h2{font-size:24px;margin:0 0 8px}.card div{font-size:14px;margin:4px 0;opacity:.9}
+.card .when{font-weight:600;opacity:1}
+#mute{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:9;border:0;background:rgba(255,255,255,.14);color:#fff;width:38px;height:38px;border-radius:50%;font-size:17px;display:none}
+</style>
+</head>
+<body>
+<div class="glow" id="glow"></div>
+<button id="mute" aria-label="звук">♪</button>
+<audio id="bgm" src="assets/music.m4a" loop preload="auto"></audio>
+
+<!-- 1. замок -->
+<section class="screen active" id="lock">
+  <h1>Эта эмоция закрыта датой</h1>
+  <p class="hint">Твой день рождения</p>
+  <div class="row">
+    <select id="selDay" aria-label="день"></select>
+    <select id="selMonth" aria-label="месяц"></select>
+  </div>
+  <p class="err" id="err">Не то. Попробуй ещё раз</p>
+  <button class="btn" id="openBtn">Открыть</button>
+</section>
+
+<!-- 2. заставка -->
+<section class="screen" id="intro">
+  <h2>Фарзона,</h2><h2>это для тебя</h2>
+</section>
+
+<!-- 3. конверт -->
+<section class="screen" id="envelope">
+  <div class="env" id="env">
+    <div class="back"></div><div class="sheet"></div><div class="front"></div><div class="flap"></div>
+    <div class="seal">♥</div><div class="name">Фарзона</div>
+  </div>
+  <div class="tap" id="tapHint">открой, пожалуйста</div>
+</section>
+
+<!-- 4. письмо -->
+<section class="screen" id="letter">
+  <div class="paper" id="paper">
+    <p class="to">Фарзона, привет</p>
+    <h2>Я хотел написать тебе нормально</h2>
+    <p>Меня зовут Асад.</p>
+    <p>В прошлый раз между нами вышло небольшое недопонимание: я сказал одно, а ты услышала другое. Никто не виноват, слова иногда путаются, а письмом это не поправишь.</p>
+    <p>Мне не хочется, чтобы из-за этого мы остались чужими. Поэтому я сделал для тебя эту страничку.</p>
+    <p>Давай начнём сначала и познакомимся по-настоящему. Выбери на следующем экране, как тебе удобно. Как скажешь, так и будет.</p>
+    <p class="sign">Асад</p>
+  </div>
+  <button class="btn pink" data-next="choose">Дальше ♥</button>
+</section>
+
+<!-- 5. выбор -->
+<section class="screen" id="choose">
+  <h2>Что будем делать?</h2>
+  <div class="choices">
+    <div class="choice" data-c="talk"><span class="e">💬</span><span><b>Давай поговорим</b><small>просто напиши мне</small></span></div>
+    <div class="choice" data-c="meet"><span class="e">☕</span><span><b>Давай встретимся</b><small>где-нибудь тихо</small></span></div>
+    <div class="choice" data-c="time"><span class="e">⏳</span><span><b>Дай мне время</b><small>я не тороплю</small></span></div>
+    <div class="choice" data-c="call"><span class="e">📞</span><span><b>Позвони мне</b><small>хочу услышать голос</small></span></div>
+  </div>
+</section>
+
+<!-- 6. дата -->
+<section class="screen" id="dateS">
+  <h2>Когда?</h2>
+  <div class="wheel"><div class="bar"></div><ul id="wDate"></ul></div>
+  <button class="btn" data-next="timeS">Дальше</button>
+</section>
+
+<!-- 7. время -->
+<section class="screen" id="timeS">
+  <h2>Во сколько?</h2>
+  <div class="wheel"><div class="bar"></div><ul id="wTime"></ul></div>
+  <button class="btn" id="doneBtn">Готово</button>
+</section>
+
+<!-- 8. финал -->
+<section class="screen" id="finale">
+  <canvas id="mosaic"></canvas>
+  <div class="count" id="count">0</div>
+  <div class="line" id="finLine">Из тысяч точек сложилась ты</div>
+  <div class="card"><h2>Спасибо, Фарзона</h2><div id="fChoice"></div><div class="when" id="fWhen"></div></div>
+</section>
+
+<script>
+/* ---------- настройки ---------- */
+const CONFIG = {
+  birthDay: 17, birthMonth: 3,          // март, 17
+  photo: 'assets/photo.jpg',
+  crop: {x:.13, y:.14, w:.80, h:.50},   // кадр лица (без водяного знака)
+  endpoint: '',                         // сюда позже URL бота/сервера для отправки её выбора
+};
+const tg = window.Telegram && Telegram.WebApp;
+if (tg){ try{ tg.ready(); tg.expand(); tg.setHeaderColor('#2a0b2e'); tg.setBackgroundColor('#2a0b2e'); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const state = {choice:null, date:null, time:null};
+const bgm = $('#bgm'), glow = $('#glow');
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+  glow.classList.toggle('on', ['intro','envelope','choose','dateS','timeS','finale'].includes(id));
+}
+document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.next)));
+
+/* ---------- замок: день рождения ---------- */
+const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+for(let d=1; d<=31; d++) $('#selDay').add(new Option(d, d));
+months.forEach((m,i)=> $('#selMonth').add(new Option(m, i+1)));
+$('#selDay').value = 1; $('#selMonth').value = 1;
+
+$('#openBtn').addEventListener('click', async ()=>{
+  // музыка стартует по первому касанию
+  bgm.volume = .7; bgm.play().then(()=>{ $('#mute').style.display='block'; }).catch(()=>{});
+  const ok = +$('#selDay').value===CONFIG.birthDay && +$('#selMonth').value===CONFIG.birthMonth;
+  const btn = $('#openBtn');
+  if(!ok){
+    const r = document.querySelector('#lock .row'); r.classList.remove('shake'); void r.offsetWidth; r.classList.add('shake');
+    $('#err').classList.add('on'); tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('error'); return;
+  }
+  $('#err').classList.remove('on'); btn.disabled = true; btn.textContent = 'Проверяю…';
+  tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('success');
+  setTimeout(()=>{ show('intro'); setTimeout(()=>show('envelope'), 4200); }, 1100);
+});
+$('#mute').addEventListener('click', ()=>{ bgm.muted=!bgm.muted; $('#mute').style.opacity = bgm.muted?.45:1; });
+
+/* ---------- конверт ---------- */
+$('#env').addEventListener('click', ()=>{
+  const e = $('#env'); if(e.classList.contains('open')) return;
+  e.classList.add('open'); $('#tapHint').textContent = 'открываю…';
+  tg&&tg.HapticFeedback&&tg.HapticFeedback.impactOccurred('medium');
+  setTimeout(()=>show('letter'), 2200);
+});
+
+/* ---------- выбор ---------- */
+const CHOICES = {
+  talk:{t:'Поговорим', s:'просто напишу тебе', needDate:false},
+  meet:{t:'Встретимся', s:'где-нибудь тихо', needDate:true},
+  time:{t:'Дам время', s:'я не тороплю', needDate:false},
+  call:{t:'Позвонить', s:'хочу услышать голос', needDate:true},
+};
+document.querySelectorAll('.choice').forEach(c=>c.addEventListener('click',()=>{
+  state.choice = c.dataset.c;
+  if(CHOICES[state.choice].needDate) show('dateS'); else finish();
+}));
+
+/* ---------- колёса даты и времени ---------- */
+function makeWheel(ul, items, onPick){
+  ul.innerHTML = items.map(i=>`<li>${i.label}</li>`).join('');
+  const lis = [...ul.children]; let cur = -1;
+  const upd = ()=>{ const i = Math.max(0, Math.min(items.length-1, Math.round(ul.scrollTop/36)));
+    if(i!==cur){ cur=i; lis.forEach((l,k)=>l.classList.toggle('sel',k===i)); onPick(items[i].value); } };
+  ul.addEventListener('scroll', upd, {passive:true}); upd();
+  lis.forEach((l,i)=>l.addEventListener('click',()=>ul.scrollTo({top:i*36,behavior:'smooth'})));
+}
+const days = ['вс','пн','вт','ср','чт','пт','сб'];
+const dateItems = Array.from({length:14},(_,k)=>{ const d=new Date(); d.setDate(d.getDate()+k+1);
+  return {label:`${d.getDate()} ${months[d.getMonth()]} · ${days[d.getDay()]}`, value:`${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`}; });
+const timeItems = []; for(let h=10; h<=22; h++){ for(const m of [0,30]){ if(h===22&&m) continue; const t=`${h}:${m?'30':'00'}`; timeItems.push({label:t,value:t}); } }
+makeWheel($('#wDate'), dateItems, v=>state.date=v);
+makeWheel($('#wTime'), timeItems, v=>state.time=v);
+/* колёса стартуют с реального положения, когда экран уже виден */
+$('#doneBtn').addEventListener('click', finish);
+
+/* ---------- финал ---------- */
+function finish(){
+  const c = CHOICES[state.choice];
+  $('#fChoice').textContent = c.t + ' · ' + c.s;
+  $('#fWhen').textContent = c.needDate ? `${state.date} · ${state.time}` : '';
+  if(!c.needDate) $('#fWhen').style.display='none';
+  show('finale'); runMosaic(); notify();
+}
+if(location.hash==='#preview-finale'){ state.choice='meet'; state.date='пн, 31 августа'; state.time='18:00'; finish(); }
+function notify(){
+  const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+  const payload = {choice:state.choice, date:state.date, time:state.time, user: user?{id:user.id,username:user.username,name:user.first_name}:null};
+  try{ if(CONFIG.endpoint) fetch(CONFIG.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true}); }catch(e){}
+  console.log('notify', payload);
+}
+
+function runMosaic(){
+  const img = new Image();
+  img.onload = ()=>{
+    const cv = $('#mosaic'), dpr = Math.min(devicePixelRatio||1,2);
+    const W = cv.clientWidth, H = Math.round(W*10/9); cv.width=W*dpr; cv.height=H*dpr;
+    const ctx = cv.getContext('2d'); ctx.scale(dpr,dpr);
+    const cols = 72, rows = 80;
+    const off = document.createElement('canvas'); off.width=cols; off.height=rows; const o = off.getContext('2d');
+    const s = CONFIG.crop, sw = img.width*s.w, sh = img.height*s.h;
+    // вписать кадр по "cover" в сетку
+    const k = Math.max(cols/sw, rows/sh), dw = sw*k, dh = sh*k;
+    o.drawImage(img, img.width*s.x, img.height*s.y, sw, sh, (cols-dw)/2, (rows-dh)/2, dw, dh);
+    const px = o.getImageData(0,0,cols,rows).data, cw=W/cols, ch=H/rows;
+    const order = Array.from({length:cols*rows},(_,i)=>i).sort(()=>Math.random()-.5);
+    const total = order.length, dur = location.hash==='#preview-finale' ? 1 : 6500, t0 = performance.now(); let drawn = 0;
+    function color(i){ const r=px[i*4],g=px[i*4+1],b=px[i*4+2], l=(0.3*r+0.59*g+0.11*b)/255;
+      return `rgb(${Math.round(60+l*195)},${Math.round(20+l*150)},${Math.round(80+l*120)})`; }
+    (function frame(now){
+      const p = Math.min(1,(now-t0)/dur), target = Math.floor(total*p*p*(3-2*p));
+      for(; drawn<target; drawn++){ const i=order[drawn], x=i%cols, y=(i/cols)|0;
+        ctx.fillStyle=color(i); ctx.fillRect(x*cw+.4,y*ch+.4,cw-.8,ch-.8); }
+      $('#count').textContent = Math.min(drawn,total);
+      if(p<1) requestAnimationFrame(frame);
+    })(t0);
+  };
+  img.src = CONFIG.photo;
+}
+</script>
+</body>
+</html>
