@@ -87,13 +87,13 @@ select option{color:#222}
 @keyframes unf1{0%{transform:perspective(900px) rotateX(-180deg);filter:brightness(1)}50%{filter:brightness(.82)}100%{transform:perspective(900px) rotateX(0);filter:brightness(1)}}
 @keyframes unf3{0%{transform:perspective(900px) rotateX(180deg);filter:brightness(1)}50%{filter:brightness(.82)}100%{transform:perspective(900px) rotateX(0);filter:brightness(1)}}
 .stage.pv .fp1,.stage.pv .fp3{animation-play-state:paused;animation-delay:-.55s}
-.stage.fin .fp1,.stage.fin .fp3{animation:none;transform:perspective(900px) rotateX(0)}
+.stage.fin .fp1,.stage.fin .fp3{animation:none;transform:none}
 .stage.fin .fp{box-shadow:none}
 .stage.fin{filter:drop-shadow(0 18px 30px rgba(0,0,0,.4))}
-.pc{position:absolute;left:0;padding:26px 24px;text-align:left;color:var(--ink);font-size:var(--fs,19px)}
+.pc{position:absolute;left:0;padding:22px 20px;text-align:left;color:var(--ink);font-size:var(--fs,19px)}
 .pc .to{font-family:var(--script);color:#e0457f;font-size:.95em;margin:0 0 .3em}
 .pc h2{font-family:var(--serif);color:#4a3a42;font-size:1.55em;line-height:1.1;margin:0 0 .5em}
-.pc p{font-family:var(--script);line-height:1.5;margin:0 0 .55em}
+.pc p{font-family:var(--script);line-height:1.4;margin:0 0 .5em}
 .pc .sign{text-align:right;color:#8a7a82;margin-top:.7em}#nextLetter{opacity:0;pointer-events:none}
 #nextLetter.show{opacity:1;pointer-events:auto}
 
@@ -172,13 +172,14 @@ select option{color:#222}
   <div id="letterTpl" hidden>
     <p class="to">Фарзона, здравствуйте</p>
     <h2>Я хотел написать вам нормально</h2>
-    <p>Меня зовут Асад.</p>
-    <p>В прошлый раз между нами вышло небольшое недопонимание: я сказал одно, а вы услышали другое. Никто не виноват, слова иногда путаются, а письмом это не поправишь.</p>
-    <p>Мне не хочется, чтобы из-за этого мы остались чужими. Поэтому я сделал для вас эту страничку.</p>
+    <p>Это Асад.</p>
+    <p>Пишу это письмо 21 октября в 22:00, без подготовки, хочу чтобы было естественно, и постараюсь высказать что чувствую (музыкой, бордовым цветом, словами). В прошлый раз между нами вышло небольшое недопонимание: я не совсем такой, как вы думаете.</p>
+    <p>Мне не хочется, чтобы из-за этого мы остались чужими. Поэтому я сделал для вас эту страничку. Надеюсь, вам понравится и на лице появится улыбка.</p>
+    <p>Вы мне нравитесь, странно, что мы даже не пересекались, меня цепляют ваши ценности. То, как вы смотрите на отношения: что не ищете их ради отношений, а хотите спутника на всю жизнь. Я это очень ценю в вас. Я по-настоящему влюблялся 1 раз и ждал 7 лет. Только ждал и заставлял ждать, не могу позволить себе повторение этого.</p>
+    <p>Я очень хочу, чтобы мы были вместе: 1 встреча и 1 разговор лицом к лицу могут решить многое. Неправильно спешить и неправильно тянуть. Если есть какая-то искра, разве не это сигнал, что а вдруг? Такое не происходит каждый день и со всеми.</p>
     <p>Давайте начнём сначала и познакомимся по-настоящему. Выберите на следующем экране, как вам удобно. Как скажете, так и будет.</p>
     <p class="sign">Асад</p>
-  </div>
-  <button class="btn pink" id="nextLetter" data-next="choose">Дальше ♥</button>
+  </div>  <button class="btn pink" id="nextLetter" data-next="choose">Дальше ♥</button>
 </section>
 <!-- 5. выбор -->
 <section class="screen" id="choose">
@@ -323,13 +324,13 @@ $('#env').addEventListener('click', ()=>{
 let unfolded = false, built = false, unfoldTimers = [];
 function buildLetter(){
   const stage = $('#stage'), tpl = $('#letterTpl').innerHTML;
-  const W = Math.round(Math.min(innerWidth*.84, 340)), avail = Math.min(innerHeight-190, 700);
+  const W = Math.round(Math.min(innerWidth*.92, 390)), avail = Math.min(innerHeight-150, 720);
   const m = document.createElement('div'); m.className='pc'; m.style.cssText=`visibility:hidden;width:${W}px;left:0;top:0`; m.innerHTML = tpl; document.body.appendChild(m);
-  let fs = 19; for(; fs>=12; fs-=.5){ m.style.setProperty('--fs', fs+'px'); if(m.offsetHeight<=avail) break; }
+  let fs = 19; for(; fs>=11; fs-=.5){ m.style.setProperty('--fs', fs+'px'); if(m.offsetHeight<=avail) break; }
   const H = Math.max(3*120, Math.round(Math.min(avail, m.offsetHeight)/3)*3); m.remove();
   stage.style.width = W+'px'; stage.style.height = H+'px'; stage.style.setProperty('--fs', fs+'px');
   const ph = H/3;
-  stage.innerHTML = [1,2,3].map((n,i)=>`<div class="fp fp${n}" style="top:${i*ph}px;height:${ph}px"><div class="face"><div class="pc" style="width:${W}px;height:${H}px;top:${-i*ph}px">${tpl}</div></div>${n===2?'':'<div class="face bk"></div>'}</div>`).join('');
+  stage.innerHTML = [1,2,3].map((n,i)=>`<div class="fp fp${n}" style="top:${i*ph}px;height:${ph+(n<3?1:0)}px"><div class="face"><div class="pc" style="width:${W}px;height:${H}px;top:${-i*ph}px">${tpl}</div></div>${n===2?'':'<div class="face bk"></div>'}</div>`).join('');
   built = true;
 }
 function playUnfold(){
